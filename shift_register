@@ -1,0 +1,148 @@
+int data_c1 = 12;
+int data_c2 = 10;
+int data_a  = 9;
+int clk_pin = 8;
+
+void setup() 
+{
+  pinMode(data_c1,OUTPUT);
+  pinMode(data_c2,OUTPUT);
+  pinMode(data_a,OUTPUT);
+  pinMode(clk_pin,OUTPUT);
+}
+
+void loop() 
+{
+  all_off();
+  all_on();
+  flicker_on();
+  flicker_off();
+  random_flicker();
+  rain();
+  spiral();
+}
+
+void shift_out(byte d_c1,byte d_c2,byte d_a)
+{
+  shiftOut(data_c1,clk_pin,LSBFIRST,d_c1);
+  shiftOut(data_c2,clk_pin,LSBFIRST,d_c2);
+  shiftOut(data_a,clk_pin,LSBFIRST,d_a); 
+}
+void all_on()
+{
+  byte d_c1 = 00000000;
+  byte d_c2 = 00000000;
+  byte d_a  = 00001111;
+  shift_out(d_c1, d_c2,d_a);
+}
+void all_off()
+{
+  byte d_c1 = 11111111;
+  byte d_c2 = 11111111;
+  byte d_a  = 00000000;
+  shift_out(d_c1,d_c2,d_a);
+}
+void flicker_on()
+{
+  all_on();
+  delay(150);  
+  for(int t = 150;t >= 0;t -= 5)
+  {
+    all_off();
+    delay(t);
+    all_on();
+    delay(t);
+  }
+}
+void flicker_off() 
+{
+  all_on();
+  for(int t = 0;t <= 150; t += 5)
+  {
+    all_off();
+    delay(t+50);
+    all_on();
+    delay(t);
+  }
+}
+void random_flicker()
+{
+  all_off();
+  int x = 10;
+  delay(x);
+  for(int i = 0;i <= 750; i += 2)
+  {
+    int layer_select = random(0,4);
+    int column_select = random(0,16);
+    shiftOut(data_a,clk_pin,LSBFIRST,1<<layer_select);
+    if(column_select < 8)
+    {
+      shiftOut(data_c1,clk_pin,LSBFIRST,1<<column_select);  
+    }
+    else
+    {
+      shiftOut(data_c1,clk_pin,LSBFIRST,0);
+      shiftOut(data_c2,clk_pin,LSBFIRST,1<<column_select-8);  
+    }
+    delay(x);
+    all_off();
+    delay(x);
+  }
+}
+void rain()
+{
+  all_off();
+  int x=100;
+  int i;
+  int layer_select;
+  for(i=0;i<=30;i+=1)
+  {
+    int column_select = random(0,16);
+    for(layer_select=3;layer_select>=0;layer_select--)
+    {
+      shiftOut(data_a,clk_pin,LSBFIRST,1<<layer_select);
+      if(column_select < 8)
+      {
+        shiftOut(data_c1,clk_pin,LSBFIRST,1<<column_select);  
+      }
+      else
+      {
+        shiftOut(data_c1,clk_pin,LSBFIRST,0);
+        shiftOut(data_c2,clk_pin,LSBFIRST,1<<column_select-8);  
+      }
+     }
+  }
+}
+void spiral()
+{
+  int i;
+  all_off();
+  byte data[16][3]= {
+  { 11111111,  11111110,  00001111 },  //0
+  { 11111111,  11111101,  00001111 },  //1
+  { 11111111,  11111011,  00001111 },  //2
+  { 11111111,  11110111,  00001111 },  //3
+  { 11111111,  01111111,  00001111 },  //7
+  { 11110111,  11111111,  00001111 },  //11
+  { 01111111,  11111111,  00001111 },  //15
+  { 10111111,  11111111,  00001111 },  //14
+  { 11011111,  11111111,  00001111 },  //13
+  { 11101111,  11111111,  00001111 },  //12
+  { 11111110,  11111111,  00001111 },  //8
+  { 11111111,  11101111,  00001111 },  //4
+  { 11111111,  11011111,  00001111 },  //5
+  { 11111111,  10111111,  00001111 },  //6
+  { 11111011,  11111111,  00001111 },  //10
+  { 11111110,  11111111,  00001111 }
+  };
+  for(i = 0;i < 16;i++)
+  {
+    shift_out(data[i][0], data[i][1], data[i][2]);
+    delay(100);
+  }
+  for(int i = 15; i >= 0;i--)
+  {
+    shift_out(data[i][0], data[i][1], data[i][2]);
+    delay(100);  
+  }  
+}
