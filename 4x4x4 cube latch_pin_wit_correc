@@ -1,0 +1,165 @@
+//Code for shift register having latch pin 
+int data_pin = 12;
+int clk_pin = 11;     //sh_cp
+int latch_pin = 10;   //st_cp
+//int i;
+
+void setup() 
+{
+  pinMode(data_pin,OUTPUT);
+  pinMode(clk_pin,OUTPUT);
+  pinMode(latch_pin,OUTPUT);
+}
+
+void loop() 
+{
+  all_off();
+  all_on();
+  flicker_on();
+  flicker_off();
+  random_flicker();
+  rain();
+  spiral();
+}
+
+void shift_out(long int data)                //byte cant acccomodate that size
+{
+  shiftOut(data_pin,clk_pin,LSBFIRST,data);
+  shiftOut(data_pin,clk_pin,LSBFIRST,data>>8);
+  shiftOut(data_pin,clk_pin,LSBFIRST,data>>8);
+  digitalWrite(latch_pin,LOW);
+  digitalWrite(latch_pin,HIGH); 
+}
+
+
+void all_on()
+{
+  long int data = 0b000000000000000000001111;         //last 4-bits for anode and last but-one 4-bits are always zero 
+  shift_out(data);
+}
+
+
+void all_off()
+{
+   long int data = 0b111111111111111100000000;     
+   shift_out(data);
+}
+
+
+void flicker_on()      
+{
+  all_on();
+  delay(500);  
+  for(int t = 150;t >= 50;t -= 5)
+  {
+    all_off();
+    delay(t);
+    all_on();
+    delay(t);
+  }
+}
+
+
+void flicker_off() 
+{
+  all_on();
+  for(int t = 50;t <= 150; t += 5)
+  {
+    all_off();
+    delay(t+50);
+    all_on();
+    delay(t);
+  }
+}
+
+
+void random_flicker()
+{
+  shift_out(0);        //making all output pins values to zero
+  int x = 50;
+  delay(x);
+  for(int i = 0;i <= 750; i += 2)
+  {
+    int layer_select = random(0,4);
+    int column_select = random(0,16);
+    shiftOut(data_pin,clk_pin,LSBFIRST,1<<layer_select);
+    if(column_select < 8)
+    {
+      shiftOut(data_pin,clk_pin,LSBFIRST,~(1<<column_select));
+      shiftOut(data_pin,clk_pin,LSBFIRST,0b11111111);    
+    }
+    else
+    {
+      shiftOut(data_pin,clk_pin,LSBFIRST,0b11111111);
+      shiftOut(data_pin,clk_pin,LSBFIRST,~(1<<column_select-8));  
+    }
+    digitalWrite(latch_pin,LOW);
+    digitalWrite(latch_pin,HIGH);
+    delay(x);
+    shift_out(0);
+    delay(x);
+  }
+}
+
+
+void rain()
+{
+  all_off();
+  int x=90;
+  for(int i=0;i<=30;i+=1)
+  {
+    int column_select = random(0,16);
+    for(int layer_select=3;layer_select>=0;layer_select--)
+    {
+      shiftOut(data_pin,clk_pin,LSBFIRST,1<<layer_select);
+      if(column_select < 8)
+      {
+        shiftOut(data_pin,clk_pin,LSBFIRST,~(1<<column_select));
+        shiftOut(data_pin,clk_pin,LSBFIRST,0b11111111);    
+      }
+      else
+      {
+        shiftOut(data_pin,clk_pin,LSBFIRST,0b11111111);    
+        shiftOut(data_pin,clk_pin,LSBFIRST,1<<column_select-8);  
+      }
+      digitalWrite(latch_pin,LOW);
+      digitalWrite(latch_pin,HIGH);
+      delay(x);
+     }
+  }
+}
+
+
+void spiral()
+{
+  all_off();
+  long int data[16]= {
+                  0b111111111111111000001111,    //0
+                  0b111111111111110100001111,    //1
+                  0b111111111111101100001111,    //2
+                  0b111111111111011100001111,    //3
+                  0b111111110111111100001111,    //7
+                  0b111101111111111100001111,    //11
+                  0b011111111111111100001111,    //15
+                  0b101111111111111100001111,    //14
+                  0b110111111111111100001111,    //13
+                  0b111011111111111100001111,    //12
+                  0b111111101111111100001111,    //8
+                  0b111111111110111100001111,    //4
+                  0b111111111101111100001111,    //5
+                  0b111111111011111100001111,    //6
+                  0b111110111111111100001111,    //10
+                  0b111111011111111100001111     //9
+                  };
+  for(int i = 0;i < 16;i++)
+  {
+    shift_out(data[i]);
+    delay(100);
+  }
+  
+  for(int i = 15; i >= 0;i--)
+  {
+    shift_out(data[i]);
+    delay(100);  
+  }  
+}
