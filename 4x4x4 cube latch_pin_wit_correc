@@ -2,7 +2,6 @@
 int data_pin = 12;
 int clk_pin = 11;     //sh_cp
 int latch_pin = 10;   //st_cp
-//int i;
 
 void setup() 
 {
@@ -85,13 +84,13 @@ void random_flicker()
     shiftOut(data_pin,clk_pin,LSBFIRST,1<<layer_select);
     if(column_select < 8)
     {
-      shiftOut(data_pin,clk_pin,LSBFIRST,~(1<<column_select));
+      shiftOut(data_pin,clk_pin,LSBFIRST,(0b11111111)^(1<<column_select));     //makes the cathode of the led pin low and keeping other as 1
       shiftOut(data_pin,clk_pin,LSBFIRST,0b11111111);    
     }
     else
     {
       shiftOut(data_pin,clk_pin,LSBFIRST,0b11111111);
-      shiftOut(data_pin,clk_pin,LSBFIRST,~(1<<column_select-8));  
+      shiftOut(data_pin,clk_pin,LSBFIRST,(0b11111111)^(1<<column_select));  //makes the cathode of the led pin low and keeping other as 1  
     }
     digitalWrite(latch_pin,LOW);
     digitalWrite(latch_pin,HIGH);
@@ -111,17 +110,17 @@ void rain()
     int column_select = random(0,16);
     for(int layer_select=3;layer_select>=0;layer_select--)
     {
-      shiftOut(data_pin,clk_pin,LSBFIRST,1<<layer_select);
+      shiftOut(data_pin,clk_pin,LSBFIRST,1<<layer_select);    //select the anode pin(layer) of the led cube glow 
       if(column_select < 8)
       {
-        shiftOut(data_pin,clk_pin,LSBFIRST,~(1<<column_select));
+        shiftOut(data_pin,clk_pin,LSBFIRST,(0b11111111)^(1<<column_select));
         shiftOut(data_pin,clk_pin,LSBFIRST,0b11111111);    
-      }
+      }    //makes the cathode of the led pin low and keeping other as 1
       else
       {
         shiftOut(data_pin,clk_pin,LSBFIRST,0b11111111);    
-        shiftOut(data_pin,clk_pin,LSBFIRST,1<<column_select-8);  
-      }
+        shiftOut(data_pin,clk_pin,LSBFIRST,(0b11111111)^(1<<column_select));  
+      }   //makes the cathode of the led pin low and keeping other as 1
       digitalWrite(latch_pin,LOW);
       digitalWrite(latch_pin,HIGH);
       delay(x);
